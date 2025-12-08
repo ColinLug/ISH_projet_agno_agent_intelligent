@@ -29,28 +29,35 @@ class ComplexityScore:
             lex_result_bool = False
         else:
             for key in self.lex_comp:
-                if self.lex_comp[key] < other.lex_comp[key]:
-                    lex_result_bool = False
+                # Check si c'est bien un nombre (et pas un NaN)
+                if type(self.lex_comp[key]) is type(other.lex_comp[key]) is float:
+                    if self.lex_comp[key] < other.lex_comp[key]:
+                        lex_result_bool = False
 
         synt_result_bool = True
         if self.synt_comp == other.synt_comp:
             synt_result_bool = False
         else:
             for key in self.synt_comp:
-                if self.synt_comp[key] < other.synt_comp[key]:
-                    synt_result_bool = False
+                # Check si c'est bien un nombre (et pas un NaN)
+                if type(self.synt_comp[key]) is type(other.synt_comp[key]) is float:
+                    if self.synt_comp[key] < other.synt_comp[key]:
+                        synt_result_bool = False
 
         disc_result_bool = True
         if self.disc_comp == other.disc_comp:
             disc_result_bool = False
         else:
             for key in self.disc_comp:
-                if self.disc_comp[key] < other.disc_comp[key]:
-                    disc_result_bool = False
+                # Check si c'est bien un nombre (et pas un NaN)
+                if type(self.disc_comp[key]) is type(other.disc_comp[key]) is float:
+                    if self.disc_comp[key] < other.disc_comp[key]:
+                        disc_result_bool = False
 
         return lex_result_bool and synt_result_bool and disc_result_bool
 
 
+# A supprimer dans le rendu final
 a = ComplexityScore(0, 0, 0, 0, 0, 0, 0.1)
-b = ComplexityScore(0, 0, 0, 0, 0, 0, 0.2)
+b = ComplexityScore(0.1, 0, 0, 0.3, 0, 0, 0.2)
 print(a > b)
