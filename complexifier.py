@@ -1,6 +1,7 @@
 """Ce script permettra de créer l'agent de complexification (cerveau bleu)"""
 
 from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
 from agno.models.huggingface import HuggingFace
 from pydantic.main import BaseModel
 
@@ -21,52 +22,41 @@ instructions_complex_agent = [
     """[TASK]\nRewrite your previously generated text in [PREVIOUS TEXT] by applying exactly and only the editing instructions contained in the ‘‘action plan’’ field of [ACTION PLAN]. Do not introduce any additional modifications beyond those specified in the plan. Return the rewritten text as specified in [OUTPUT FORMAT].\n\n[ACTION PLAN]\n[<JSON object returned by the Critic with "status": "revision required" and an ‘‘action plan’ array of 3--5 concrete actions specifying where and what to change>]\n\n[PREVIOUS TEXT]\n[<latest generated text by the Complexification Assistant>]""",
 ]
 
-
-# Création des différents agents de complexification
+# Création des différents modèles de langage
 # Les modèles lourds recommandés à tester en premier lieu : Llama 3.1 8B / Qwen 2.5 7B / Mistral 7B / Falcon H1 7B
-complexifier_agent_llama = Agent(
-    model=HuggingFace(
-        id="meta-llama/Meta-Llama-3.1-8B-Instruct",  # meta-llama/llama-3.2-3b-instruct:free pour petit modèle
-        name="Llama3.1",  # Llama3.2 pour petit modèle
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
-    description=description_complex_agent,
-    instructions=instructions_complex_agent,
-    output_schema=OutputJsonl,
+model_llama = HuggingFace(
+    id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
+    name="Qwen2.5",  # Qwen3 pour petit modèle
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
 )
-complexifier_agent_qwen = Agent(
-    model=HuggingFace(
-        id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
-        name="Qwen2.5",  # Qwen3 pour petit modèle
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
-    description=description_complex_agent,
-    instructions=instructions_complex_agent,
-    output_schema=OutputJsonl,
+model_qwen = HuggingFace(
+    id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
+    name="Qwen2.5",  # Qwen3 pour petit modèle
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
 )
-complexifier_agent_mistral = Agent(
-    model=HuggingFace(
-        id="mistralai/Mistral-7B-Instruct-v0.3",  # mistralai/mistral-7b-instruct:free pour petit modèle
-        name="Mistral7B",
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
-    description=description_complex_agent,
-    instructions=instructions_complex_agent,
-    output_schema=OutputJsonl,
+model_mistral = model = HuggingFace(
+    id="mistralai/Mistral-7B-Instruct-v0.3",  # mistralai/mistral-7b-instruct:free pour petit modèle
+    name="Mistral7B",
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
 )
-complexifier_agent_falcon = Agent(
-    model=HuggingFace(
-        id="tiiuae/Falcon-H1-7B-Instruct",  # google/gemma-3-12b-it:free pour petit modèle
-        name="FalconH1",  # Gemma3
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
+model_falcon = HuggingFace(
+    id="tiiuae/Falcon-H1-7B-Instruct",  # google/gemma-3-12b-it:free pour petit modèle
+    name="FalconH1",  # Gemma3
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
+)
+# Création de l'agent
+critic_agent = Agent(
+    model=model_llama,
     description=description_complex_agent,
     instructions=instructions_complex_agent,
     output_schema=OutputJsonl,
+    db=SqliteDb(db_file="./BD/IA.db"),
+    add_history_to_context=True,
+    num_history_runs=3,
 )
 """Paramètres des modèles
 

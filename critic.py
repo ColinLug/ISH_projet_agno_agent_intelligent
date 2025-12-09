@@ -1,6 +1,7 @@
 """Ce script permettra de créer l'agent de critique de la complexification (cerveau gris)"""
 
 from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
 from agno.models.huggingface import HuggingFace
 from pydantic.main import BaseModel
 
@@ -25,52 +26,41 @@ description_complex_agent = f'[ROLE]\nYou are a Critic Assistant in a multi-agen
 instructions_critic_agent = [
     """[TASK]\nReview the text in [CURRENT] with complexity profile described in [TEXT COMPLEXITY PROFILE], against the [TARGET COMPLEXITY PROFILE], the [DIAGNOSTICS], and the original [SOURCE TEXT].\nFrom the [ACTIONS LIBRARY], select only what is needed and turn it into a short, concrete ACTION PLAN for the next rewrite.\nDo not rewrite the text. Return your output strictly in the JSON format specified in [OUTPUT FORMAT].\n\n[TARGET COMPLEXITY PROFILE]\n[<MTLD, LD, LS, MDD, CS, LC, CoH> in order]\n\n[TEXT COMPLEXITY PROFILE]\nThe complexity profile of [SOURCE TEXT] is [<>], where the metrics are provided in the following fixed order: MTLD, LD, LS, MDD, CS, LC, CoH.\n\n[DIAGNOSTICS]\nBelow target: [<list metrics under target>].\nDrivers missing: [<lexical? syntactic? discourse?>].\nLength issues: [<if any>].\n\n[ACTIONS LIBRARY]\n[<The information below must be dynamically filled>]\nIf MTLD is low: vary expressions; avoid repeated phrases; add precise modifiers and paraphrases.\nIf LD is low: reduce filler/function words; replace with content-bearing terms.\nIf LS is low: prefer specific, less generic vocabulary appropriate to the topic.\nIf MDD is low: restructure to lengthen dependencies (front adverbial/subordinate clauses; postpone heavy complements; use relative clauses) while keeping grammar natural.\nIf CS is low: embed subordinate/complement/relative clauses instead of splitting or over-coordinating.\nIf LC is low: maintain a lexical thread across sentences by reusing key lemmas or close synonyms; avoid verbatim repetition.\nIf CoH is low: improve transitions with brief connective/bridging sentences; keep topic flow consistent.\nIf Length is off: add or trim substantive content (details, appositives, examples), not boilerplate.\n\n[SOURCE TEXT]\n[<original source text>]\n\n[CURRENT]\n[<latest generated text by the Complexification Assistant>]\n[OBJECTIVES]\n\nThe text in [CURRENT] must achieve dominance over the target complexity profile, which is provided as an ordered vector of metrics: MTLD, LD, LS, MDD, CS, LC, CoH. Dominance is achieved in the following sense: every complexity measure (MTLD, LD, LS, MDD, CS, LC, CoH) of the generated text must be greater than or equal to its corresponding target value. Additionally, the generated text must provide strict improvement in at least one lexical dimension (MTLD, LD, or LS), at least one syntactic dimension (MDD or CS), and at least one discourse dimension (LC or CoH). The number of words of the generated text must be in the range [< here insert the 80% and the 120% of the number of words of the complex text >]."""
 ]
-
-# Création des différents agents de complexification
+# Création des différents modèles de langage
 # Les modèles lourds recommandés à tester en premier lieu : Llama 3.1 8B / Qwen 2.5 7B / Mistral 7B / Falcon H1 7B
-critic_agent_llama = Agent(
-    model=HuggingFace(
-        id="meta-llama/Meta-Llama-3.1-8B-Instruct",  # meta-llama/llama-3.2-3b-instruct:free pour petit modèle
-        name="Llama3.1",  # Llama3.2 pour petit modèle
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
-    description=description_complex_agent,
-    instructions=instructions_critic_agent,
-    output_schema=OutputCritic,
+model_llama = HuggingFace(
+    id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
+    name="Qwen2.5",  # Qwen3 pour petit modèle
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
 )
-critic_agent_qwen = Agent(
-    model=HuggingFace(
-        id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
-        name="Qwen2.5",  # Qwen3 pour petit modèle
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
-    description=description_complex_agent,
-    instructions=instructions_critic_agent,
-    output_schema=OutputCritic,
+model_qwen = HuggingFace(
+    id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
+    name="Qwen2.5",  # Qwen3 pour petit modèle
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
 )
-critic_agent_mistral = Agent(
-    model=HuggingFace(
-        id="mistralai/Mistral-7B-Instruct-v0.3",  # mistralai/mistral-7b-instruct:free pour petit modèle
-        name="Mistral7B",
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
-    description=description_complex_agent,
-    instructions=instructions_critic_agent,
-    output_schema=OutputCritic,
+model_mistral = model = HuggingFace(
+    id="mistralai/Mistral-7B-Instruct-v0.3",  # mistralai/mistral-7b-instruct:free pour petit modèle
+    name="Mistral7B",
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
 )
-critic_agent_falcon = Agent(
-    model=HuggingFace(
-        id="tiiuae/Falcon-H1-7B-Instruct",  # google/gemma-3-12b-it:free pour petit modèle
-        name="FalconH1",  # Gemma3
-        temperature=0.01,
-        max_tokens=1000,  # une valeur par défaut
-    ),
+model_falcon = HuggingFace(
+    id="tiiuae/Falcon-H1-7B-Instruct",  # google/gemma-3-12b-it:free pour petit modèle
+    name="FalconH1",  # Gemma3
+    temperature=0.01,
+    max_tokens=1000,  # une valeur par défaut
+)
+# Création de l'agent
+critic_agent = Agent(
+    model=model_llama,
     description=description_complex_agent,
     instructions=instructions_critic_agent,
     output_schema=OutputCritic,
+    db=SqliteDb(db_file="./BD/IA.db"),
+    add_history_to_context=True,
+    num_history_runs=3,
 )
 """Paramètres des modèles
 
