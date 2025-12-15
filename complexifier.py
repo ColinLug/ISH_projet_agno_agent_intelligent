@@ -51,7 +51,7 @@ model_falcon = HuggingFace(
 )
 
 # Création de l'agent de complexification
-critic_agent = Agent(
+complexifier_agent = Agent(
     model=model_llama,
     description=description_complex_agent,
     instructions=instructions_complex_agent,
