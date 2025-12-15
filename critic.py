@@ -31,25 +31,25 @@ instructions_critic_agent = [
 model_llama = HuggingFace(
     id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
     name="Qwen2.5",  # Qwen3 pour petit modèle
-    temperature=0.01,
+    temperature=0.01, # Comme demandé par la consigne
     max_tokens=1000,  # une valeur par défaut
 )
 model_qwen = HuggingFace(
     id="Qwen/Qwen2.5-7B-Instruct",  # qwen/qwen3-14b pour le petit modèle
     name="Qwen2.5",  # Qwen3 pour petit modèle
-    temperature=0.01,
+    temperature=0.01, # Comme demandé par la consigne
     max_tokens=1000,  # une valeur par défaut
 )
 model_mistral = model = HuggingFace(
     id="mistralai/Mistral-7B-Instruct-v0.3",  # mistralai/mistral-7b-instruct:free pour petit modèle
     name="Mistral7B",
-    temperature=0.01,
+    temperature=0.01, # Comme demandé par la consigne
     max_tokens=1000,  # une valeur par défaut
 )
 model_falcon = HuggingFace(
     id="tiiuae/Falcon-H1-7B-Instruct",  # google/gemma-3-12b-it:free pour petit modèle
     name="FalconH1",  # Gemma3
-    temperature=0.01,
+    temperature=0.01, # Comme demandé par la consigne
     max_tokens=1000,  # une valeur par défaut
 )
 # Création de l'agent
@@ -58,7 +58,7 @@ critic_agent = Agent(
     description=description_complex_agent,
     instructions=instructions_critic_agent,
     output_schema=OutputCritic,
-    db=SqliteDb(db_file="./BD/IA.db"),
+    db=SqliteDb(db_file="./BD/IA.db"), # Ajout de la base de données
     add_history_to_context=True,
     num_history_runs=3,
 )
